@@ -17,6 +17,7 @@ import (
 	_ "embed"
 
 	"github.com/a-h/templ/parser/v2"
+	"github.com/a-h/templ/parser/v2/fmtstr"
 )
 
 type GenerateOpt func(g *generator) error
@@ -234,7 +235,10 @@ func (g *generator) writePackage() error {
 
 func (g *generator) writeImports() error {
 	var err error
-	if _, err = g.w.Write("import \"fmt\"\n"); err != nil {
+	if _, err = g.w.Write("import \"io\"\n"); err != nil {
+		return err
+	}
+	if _, err = g.w.Write("import \"strconv\"\n"); err != nil {
 		return err
 	}
 	// Always import templ because it's the interface type of all templates.
@@ -1359,35 +1363,36 @@ func (g *generator) writeFormatAttribute(indentLevel int, attr *parser.FormatAtt
 	}
 
 	{
-		var r parser.Range
+		exprIndex := -1
+		for _, part := range attr.FormatString.Parts {
+			if part.Type != fmtstr.PartTypeLiteral {
+				exprIndex++
+			}
 
-		// _, templ_7745c5c3_Err = fmt.Fprintf(templ_7745c5c3_Buffer, %s)
-		if _, err = g.w.WriteIndent(indentLevel, "_, templ_7745c5c3_Err = fmt.Fprintf(templ_7745c5c3_Buffer, "); err != nil {
-			return err
-		}
+			switch part.Type {
+			case fmtstr.PartTypeLiteral:
+				escaped := html.EscapeString(part.Value)
+				if _, err = g.w.WriteIndent(indentLevel,
+					"_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(\""+escaped+"\")\n",
+				); err != nil {
+					return err
+				}
+			case fmtstr.PartTypeBase10:
+				if _, err = g.w.WriteIndent(indentLevel,
+					`_, templ_7745c5c3_Err = io.WriteString(templ_7745c5c3_Buffer,`+
+						` strconv.FormatInt(int64(`+
+						attr.Args[exprIndex].Value+
+						"), 10))\n",
+				); err != nil {
+					return err
+				}
 
-		if r, err = g.w.Write(attr.FormatString.Raw); err != nil {
-			return err
-		}
-		g.sourceMap.Add(attr.Args, r)
-
-		// Comma
-		if _, err = g.w.Write(", "); err != nil {
-			return err
-		}
-
-		fmt.Println("GEN ", attr.Args.Value)
-		if r, err = g.w.Write(attr.Args.Value); err != nil {
-			return err
-		}
-		g.sourceMap.Add(attr.Args, r)
-		// )
-		if _, err = g.w.Write(")\n"); err != nil {
-			return err
-		}
-
-		if err := g.writeErrorHandler(indentLevel); err != nil {
-			return err
+			default:
+				panic("not yet implemented")
+			}
+			if err := g.writeErrorHandler(indentLevel); err != nil {
+				return err
+			}
 		}
 	}
 

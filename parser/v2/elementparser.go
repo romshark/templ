@@ -330,7 +330,6 @@ var formatAttributeParser = parse.Func(func(pi *parse.Input) (attr *FormatAttrib
 	if err != nil {
 		return attr, false, err
 	}
-	fmt.Printf("FORMAT STR %#v\n", attr.FormatString)
 
 	// ,
 	if _, ok, err = formatAttributeCommaParser.Parse(pi); err != nil || !ok {
@@ -339,13 +338,10 @@ var formatAttributeParser = parse.Func(func(pi *parse.Input) (attr *FormatAttrib
 	}
 
 	// Placeholder values
-	attr.Args, err = parseGoSliceArgs(pi)
+	attr.Args, err = parseGoSliceArgsMulti(pi)
 	if err != nil {
 		return attr, false, err
 	}
-	fmt.Printf("ARG GOT %#v\n", attr.Args)
-	fmt.Println("AFTER")
-	Peek(pi)
 
 	// Eat whitespace, plus the final brace.
 	if _, _, err = parse.OptionalWhitespace.Parse(pi); err != nil {
@@ -356,16 +352,8 @@ var formatAttributeParser = parse.Func(func(pi *parse.Input) (attr *FormatAttrib
 		return
 	}
 
-	fmt.Println("AFTER EXPR")
-	Peek(pi)
-
 	return attr, true, nil
 })
-
-func Peek(pi *parse.Input) {
-	s, ok := pi.Peek(-1)
-	fmt.Printf("peek: %q (%t)\n", s, ok)
-}
 
 var expressionAttributeStartParser = parse.StringFrom(
 	parse.OptionalWhitespace,

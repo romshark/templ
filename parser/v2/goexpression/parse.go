@@ -234,6 +234,39 @@ func SliceArgs(content string) (expr string, err error) {
 	return src[from:to], err
 }
 
+func SliceArgsMulti(content string) ([]string, int, error) {
+	argsOnly, err := SliceArgs(content)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	prefix := "package main\nvar templ_args = []any{"
+	src := prefix + argsOnly + "}"
+
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "", src, parser.AllErrors)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var exprs []string
+
+	inspectFirstNode(file, func(n ast.Node) bool {
+		decl, ok := n.(*ast.CompositeLit)
+		if !ok {
+			return true
+		}
+		for _, e := range decl.Elts {
+			start := fset.Position(e.Pos()).Offset
+			end := fset.Position(e.End()).Offset
+			exprs = append(exprs, src[start:end])
+		}
+		return false
+	})
+
+	return exprs, len(argsOnly), nil
+}
+
 // Func returns the Go code up to the opening brace of the function body.
 func Func(content string) (name, expr string, err error) {
 	prefix := "package main\n"

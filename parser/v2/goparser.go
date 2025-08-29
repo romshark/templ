@@ -43,6 +43,30 @@ func parseGoSliceArgs(pi *parse.Input) (r Expression, err error) {
 	return NewExpression(expr, from, to), nil
 }
 
+func parseGoSliceArgsMulti(pi *parse.Input) ([]Expression, error) {
+	from := pi.Position()
+	src, _ := pi.Peek(-1)
+
+	exprs, consumed, err := goexpression.SliceArgsMulti(src)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []Expression
+	offset := from.Index
+	for _, expr := range exprs {
+		startPos := pi.PositionAt(offset)
+		endPos := pi.PositionAt(offset + len(expr))
+		results = append(results, NewExpression(expr, startPos, endPos))
+
+		offset += len(expr)
+	}
+
+	pi.Take(consumed)
+
+	return results, nil
+}
+
 func peekPrefix(pi *parse.Input, prefixes ...string) bool {
 	for _, prefix := range prefixes {
 		pp, ok := pi.Peek(len(prefix))

@@ -943,7 +943,7 @@ func (bea *BoolExpressionAttribute) Copy() Attribute {
 type FormatAttribute struct {
 	Key          AttributeKey
 	FormatString fmtstr.FormatString
-	Args         Expression
+	Args         []Expression
 }
 
 func (fa *FormatAttribute) String() string {

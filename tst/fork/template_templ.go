@@ -5,7 +5,8 @@ package fork
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
-import "fmt"
+import "io"
+import "strconv"
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
@@ -34,7 +35,19 @@ func WithFmt(id int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = fmt.Fprintf(templ_7745c5c3_Buffer, "item-%d-%d", id, id+1)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("item-")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = io.WriteString(templ_7745c5c3_Buffer, strconv.FormatInt(int64(id), 10))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("-")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = io.WriteString(templ_7745c5c3_Buffer, strconv.FormatInt(int64(id+1), 10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
