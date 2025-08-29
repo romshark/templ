@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/a-h/parse"
+	"github.com/a-h/templ/parser/v2/fmtstr"
 	"github.com/a-h/templ/parser/v2/goexpression"
 )
 
@@ -288,7 +289,86 @@ var boolExpressionAttributeParser = parse.Func(func(pi *parse.Input) (r *BoolExp
 	return r, true, nil
 })
 
-var expressionAttributeStartParser = parse.StringFrom(parse.OptionalWhitespace, parse.String("="), parse.OptionalWhitespace, parse.String("{"), parse.OptionalWhitespace)
+var formatAttributeStartParser = parse.StringFrom(
+	parse.OptionalWhitespace,
+	parse.String("=%"),
+	parse.OptionalWhitespace,
+	openBrace,
+	parse.OptionalWhitespace,
+)
+
+var formatAttributeCommaParser = parse.StringFrom(
+	parse.OptionalWhitespace,
+	parse.String(","),
+	parse.OptionalWhitespace,
+)
+
+var formatAttributeParser = parse.Func(func(pi *parse.Input) (attr *FormatAttribute, ok bool, err error) {
+	start := pi.Index()
+
+	// Optional whitespace leader.
+	if _, ok, err = parse.OptionalWhitespace.Parse(pi); err != nil || !ok {
+		return
+	}
+
+	attr = &FormatAttribute{}
+
+	// Attribute name.
+	if attr.Key, ok, err = attributeKeyParser.Parse(pi); err != nil || !ok {
+		pi.Seek(start)
+		return
+	}
+
+	// =%{
+	if _, ok, err = formatAttributeStartParser.Parse(pi); err != nil || !ok {
+		pi.Seek(start)
+		return
+	}
+
+	// Format string
+	attr.FormatString, err = fmtstr.Parse(pi)
+	if err != nil {
+		return attr, false, err
+	}
+	fmt.Printf("FORMAT STR %#v\n", attr.FormatString)
+
+	// ,
+	if _, ok, err = formatAttributeCommaParser.Parse(pi); err != nil || !ok {
+		pi.Seek(start)
+		return
+	}
+
+	// Placeholder values
+	attr.Args, err = parseGoSliceArgs(pi)
+	if err != nil {
+		return attr, false, err
+	}
+	fmt.Printf("ARG GOT %#v\n", attr.Args)
+
+	// Eat whitespace, plus the final brace.
+	if _, _, err = parse.OptionalWhitespace.Parse(pi); err != nil {
+		return attr, false, err
+	}
+	if _, ok, err = closeBrace.Parse(pi); err != nil || !ok {
+		err = parse.Error("string expression attribute: missing closing brace", pi.Position())
+		return
+	}
+
+	return attr, true, nil
+})
+
+func Peek(pi *parse.Input) {
+	s, ok := pi.Peek(-1)
+	fmt.Printf("peek: %q (%t)\n", s, ok)
+}
+
+var expressionAttributeStartParser = parse.StringFrom(
+	parse.OptionalWhitespace,
+	parse.String("="),
+	parse.OptionalWhitespace,
+	openBrace,
+	parse.OptionalWhitespace,
+)
 
 var expressionAttributeParser = parse.Func(func(pi *parse.Input) (attr *ExpressionAttribute, ok bool, err error) {
 	start := pi.Index()
@@ -379,6 +459,9 @@ func (attributeParser) Parse(in *parse.Input) (out Attribute, ok bool, err error
 		return
 	}
 	if out, ok, err = boolExpressionAttributeParser.Parse(in); err != nil || ok {
+		return
+	}
+	if out, ok, err = formatAttributeParser.Parse(in); err != nil || ok {
 		return
 	}
 	if out, ok, err = expressionAttributeParser.Parse(in); err != nil || ok {

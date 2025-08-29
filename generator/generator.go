@@ -1346,6 +1346,57 @@ func (g *generator) writeExpressionAttributeValueStyle(indentLevel int, attr *pa
 	return g.writeErrorHandler(indentLevel)
 }
 
+func (g *generator) writeFormatAttribute(indentLevel int, attr *parser.FormatAttribute) (err error) {
+	if err = g.writeAttributeKey(indentLevel, attr.Key); err != nil {
+		return err
+	}
+	// ="
+	if _, err = g.w.WriteStringLiteral(indentLevel, `=\"`); err != nil {
+		return err
+	}
+
+	{
+		var r parser.Range
+		vn := g.createVariableName()
+		// var vn string
+		if _, err = g.w.WriteIndent(indentLevel, "var "+vn+" string\n"); err != nil {
+			return err
+		}
+		// vn, templ_7745c5c3_Err = templ.JoinStringErrs(
+		if _, err = g.w.WriteIndent(indentLevel, vn+", templ_7745c5c3_Err = templ.JoinStringErrs("); err != nil {
+			return err
+		}
+		// p.Name()
+		if r, err = g.w.Write(attr.Args.Value); err != nil {
+			return err
+		}
+		g.sourceMap.Add(attr.Args, r)
+		// )
+		if _, err = g.w.Write(")\n"); err != nil {
+			return err
+		}
+		// Attribute expression error handler.
+		err = g.writeExpressionErrorHandler(indentLevel, attr.Args)
+		if err != nil {
+			return err
+		}
+
+		// _, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(vn)
+		if _, err = g.w.WriteIndent(indentLevel, "_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString("+vn+"))\n"); err != nil {
+			return err
+		}
+		if err := g.writeErrorHandler(indentLevel); err != nil {
+			return err
+		}
+	}
+
+	// Close quote.
+	if _, err = g.w.WriteStringLiteral(indentLevel, `\"`); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (g *generator) writeExpressionAttribute(indentLevel int, elementName string, attr *parser.ExpressionAttribute) (err error) {
 	if err = g.writeAttributeKey(indentLevel, attr.Key); err != nil {
 		return err
@@ -1452,6 +1503,8 @@ func (g *generator) writeElementAttributes(indentLevel int, name string, attrs [
 			err = g.writeConstantAttribute(indentLevel, attr)
 		case *parser.BoolExpressionAttribute:
 			err = g.writeBoolExpressionAttribute(indentLevel, attr)
+		case *parser.FormatAttribute:
+			err = g.writeFormatAttribute(indentLevel, attr)
 		case *parser.ExpressionAttribute:
 			err = g.writeExpressionAttribute(indentLevel, name, attr)
 		case *parser.SpreadAttributes:

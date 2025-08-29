@@ -18,6 +18,7 @@ type Visitor interface {
 	VisitBoolConstantAttribute(*BoolConstantAttribute) error
 	VisitConstantAttribute(*ConstantAttribute) error
 	VisitBoolExpressionAttribute(*BoolExpressionAttribute) error
+	VisitFormatAttribute(*FormatAttribute) error
 	VisitExpressionAttribute(*ExpressionAttribute) error
 	VisitSpreadAttributes(*SpreadAttributes) error
 	VisitConditionalAttribute(*ConditionalAttribute) error

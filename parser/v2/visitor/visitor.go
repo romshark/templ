@@ -211,6 +211,7 @@ type Visitor struct {
 	BoolConstantAttribute    func(n *parser.BoolConstantAttribute) error
 	ConstantAttribute        func(n *parser.ConstantAttribute) error
 	BoolExpressionAttribute  func(n *parser.BoolExpressionAttribute) error
+	FormatAttribute          func(n *parser.FormatAttribute) error
 	ExpressionAttribute      func(n *parser.ExpressionAttribute) error
 	SpreadAttributes         func(n *parser.SpreadAttributes) error
 	ConditionalAttribute     func(n *parser.ConditionalAttribute) error
@@ -290,6 +291,10 @@ func (v *Visitor) VisitConstantAttribute(n *parser.ConstantAttribute) error {
 
 func (v *Visitor) VisitBoolExpressionAttribute(n *parser.BoolExpressionAttribute) error {
 	return v.BoolExpressionAttribute(n)
+}
+
+func (v *Visitor) VisitFormatAttribute(n *parser.FormatAttribute) error {
+	return v.FormatAttribute(n)
 }
 
 func (v *Visitor) VisitExpressionAttribute(n *parser.ExpressionAttribute) error {

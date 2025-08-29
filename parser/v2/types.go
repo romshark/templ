@@ -10,6 +10,7 @@ import (
 	"unicode"
 
 	"github.com/a-h/parse"
+	"github.com/a-h/templ/parser/v2/fmtstr"
 )
 
 // package parser
@@ -935,6 +936,78 @@ func (bea *BoolExpressionAttribute) Copy() Attribute {
 	return &BoolExpressionAttribute{
 		Expression: bea.Expression,
 		Key:        bea.Key,
+	}
+}
+
+// href=("...", ...)
+type FormatAttribute struct {
+	Key          AttributeKey
+	FormatString fmtstr.FormatString
+	Args         Expression
+}
+
+func (fa *FormatAttribute) String() string {
+	sb := new(strings.Builder)
+	_ = fa.Write(sb, 0)
+	return sb.String()
+}
+
+func (fa *FormatAttribute) formatExpression() (exp []string) {
+	panic("nyi")
+	// trimmed := strings.TrimSpace(fa.Expression.Value)
+	// if !strings.Contains(trimmed, "\n") {
+	// 	formatted, err := format.Source([]byte(trimmed))
+	// 	if err != nil {
+	// 		return []string{trimmed}
+	// 	}
+	// 	return []string{string(formatted)}
+	// }
+
+	// buf := bytes.NewBufferString("[]any{\n")
+	// buf.WriteString(trimmed)
+	// buf.WriteString("\n}")
+
+	// formatted, err := format.Source(buf.Bytes())
+	// if err != nil {
+	// 	return []string{trimmed}
+	// }
+
+	// // Trim prefix and suffix.
+	// lines := strings.Split(string(formatted), "\n")
+	// if len(lines) < 3 {
+	// 	return []string{trimmed}
+	// }
+
+	// // Return.
+	// return lines[1 : len(lines)-1]
+}
+
+func (fa *FormatAttribute) Write(w io.Writer, indent int) (err error) {
+	lines := fa.formatExpression()
+	if len(lines) == 1 {
+		return writeIndent(w, indent, fa.Key.String(), `=( `, lines[0], ` )`)
+	}
+
+	if err = writeIndent(w, indent, fa.Key.String(), "=(\n"); err != nil {
+		return err
+	}
+	for _, line := range lines {
+		if err = writeIndent(w, indent, line, "\n"); err != nil {
+			return err
+		}
+	}
+	return writeIndent(w, indent, "}")
+}
+
+func (fa *FormatAttribute) Visit(v Visitor) error {
+	return v.VisitFormatAttribute(fa)
+}
+
+func (fa *FormatAttribute) Copy() Attribute {
+	return &FormatAttribute{
+		Key:          fa.Key,
+		FormatString: fa.FormatString,
+		Args:         fa.Args,
 	}
 }
 
