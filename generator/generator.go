@@ -234,6 +234,9 @@ func (g *generator) writePackage() error {
 
 func (g *generator) writeImports() error {
 	var err error
+	if _, err = g.w.Write("import \"fmt\"\n"); err != nil {
+		return err
+	}
 	// Always import templ because it's the interface type of all templates.
 	if _, err = g.w.Write("import \"github.com/a-h/templ\"\n"); err != nil {
 		return err
@@ -1357,16 +1360,23 @@ func (g *generator) writeFormatAttribute(indentLevel int, attr *parser.FormatAtt
 
 	{
 		var r parser.Range
-		vn := g.createVariableName()
-		// var vn string
-		if _, err = g.w.WriteIndent(indentLevel, "var "+vn+" string\n"); err != nil {
+
+		// _, templ_7745c5c3_Err = fmt.Fprintf(templ_7745c5c3_Buffer, %s)
+		if _, err = g.w.WriteIndent(indentLevel, "_, templ_7745c5c3_Err = fmt.Fprintf(templ_7745c5c3_Buffer, "); err != nil {
 			return err
 		}
-		// vn, templ_7745c5c3_Err = templ.JoinStringErrs(
-		if _, err = g.w.WriteIndent(indentLevel, vn+", templ_7745c5c3_Err = templ.JoinStringErrs("); err != nil {
+
+		if r, err = g.w.Write(attr.FormatString.Raw); err != nil {
 			return err
 		}
-		// p.Name()
+		g.sourceMap.Add(attr.Args, r)
+
+		// Comma
+		if _, err = g.w.Write(", "); err != nil {
+			return err
+		}
+
+		fmt.Println("GEN ", attr.Args.Value)
 		if r, err = g.w.Write(attr.Args.Value); err != nil {
 			return err
 		}
@@ -1375,16 +1385,7 @@ func (g *generator) writeFormatAttribute(indentLevel int, attr *parser.FormatAtt
 		if _, err = g.w.Write(")\n"); err != nil {
 			return err
 		}
-		// Attribute expression error handler.
-		err = g.writeExpressionErrorHandler(indentLevel, attr.Args)
-		if err != nil {
-			return err
-		}
 
-		// _, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(vn)
-		if _, err = g.w.WriteIndent(indentLevel, "_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString("+vn+"))\n"); err != nil {
-			return err
-		}
 		if err := g.writeErrorHandler(indentLevel); err != nil {
 			return err
 		}
@@ -1394,6 +1395,7 @@ func (g *generator) writeFormatAttribute(indentLevel int, attr *parser.FormatAtt
 	if _, err = g.w.WriteStringLiteral(indentLevel, `\"`); err != nil {
 		return err
 	}
+
 	return nil
 }
 

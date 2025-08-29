@@ -33,6 +33,7 @@ type Part struct {
 }
 
 type FormatString struct {
+	Raw   string
 	Parts []Part
 }
 
@@ -122,8 +123,13 @@ func Parse(pi *parse.Input) (FormatString, error) {
 		}
 	}
 
+	end := pi.Index()
+	pi.Seek(start)
+	raw, _ := pi.Peek(end - start)
+	pi.Seek(end)
+
 	flushLit()
-	return FormatString{Parts: parts}, nil
+	return FormatString{Raw: raw, Parts: parts}, nil
 }
 
 func classifyVerb(r rune) PartType {

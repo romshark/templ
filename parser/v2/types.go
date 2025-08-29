@@ -954,7 +954,7 @@ func (fa *FormatAttribute) String() string {
 
 func (fa *FormatAttribute) formatExpression() (exp []string) {
 	panic("nyi")
-	// trimmed := strings.TrimSpace(fa.Expression.Value)
+	// trimmed := strings.TrimSpace(fa.Args.Value)
 	// if !strings.Contains(trimmed, "\n") {
 	// 	formatted, err := format.Source([]byte(trimmed))
 	// 	if err != nil {

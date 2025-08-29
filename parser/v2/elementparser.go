@@ -344,6 +344,8 @@ var formatAttributeParser = parse.Func(func(pi *parse.Input) (attr *FormatAttrib
 		return attr, false, err
 	}
 	fmt.Printf("ARG GOT %#v\n", attr.Args)
+	fmt.Println("AFTER")
+	Peek(pi)
 
 	// Eat whitespace, plus the final brace.
 	if _, _, err = parse.OptionalWhitespace.Parse(pi); err != nil {
@@ -353,6 +355,9 @@ var formatAttributeParser = parse.Func(func(pi *parse.Input) (attr *FormatAttrib
 		err = parse.Error("string expression attribute: missing closing brace", pi.Position())
 		return
 	}
+
+	fmt.Println("AFTER EXPR")
+	Peek(pi)
 
 	return attr, true, nil
 })

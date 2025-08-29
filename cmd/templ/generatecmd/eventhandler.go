@@ -206,6 +206,10 @@ func (h *FSEventHandler) generate(ctx context.Context, fileName string) (result 
 		return GenerateResult{}, nil, fmt.Errorf("%s generation error: %w", fileName, err)
 	}
 
+	if err := os.WriteFile("/Users/rsc/Work/romshark/templ/debug.go.out", b.Bytes(), 0o777); err != nil {
+		panic(err)
+	}
+
 	formattedGoCode, err := format.Source(b.Bytes())
 	if err != nil {
 		err = remapErrorList(err, generatorOutput.SourceMap, fileName)
