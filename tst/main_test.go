@@ -20,6 +20,20 @@ func BenchmarkRender(b *testing.B) {
 		}
 	})
 
+	b.Run("orig-concat", func(b *testing.B) {
+		for b.Loop() {
+			buffer.Reset()
+			orig.Concat(42).Render(ctx, &buffer)
+		}
+	})
+
+	b.Run("orig-strbuild", func(b *testing.B) {
+		for b.Loop() {
+			buffer.Reset()
+			orig.Strbuild(42).Render(ctx, &buffer)
+		}
+	})
+
 	b.Run("fork", func(b *testing.B) {
 		for b.Loop() {
 			buffer.Reset()

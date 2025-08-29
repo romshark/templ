@@ -34,7 +34,7 @@ func WithFmt(id int) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = fmt.Fprintf(templ_7745c5c3_Buffer, "item-%d-%d", 42, 43)
+		_, templ_7745c5c3_Err = fmt.Fprintf(templ_7745c5c3_Buffer, "item-%d-%d", id, id+1)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

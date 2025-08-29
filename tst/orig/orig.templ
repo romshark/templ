@@ -1,7 +1,27 @@
 package orig
 
 import "fmt"
+import "strconv"
+import "strings"
 
 templ WithFmt(id int) {
-	<div id={ fmt.Sprintf("item-%d-%d", 42, 43) }></div>
+	<div id={ fmt.Sprintf("item-%d-%d", id, id+1) }></div>
+}
+
+templ Concat(id int) {
+	<div id={ "item-" + strconv.Itoa(id) + "-" + strconv.Itoa(id+1) }></div>
+}
+
+templ Strbuild(id int) {
+	<div id={ makeID(id, id+1) }></div>
+}
+
+func makeID(id1, id2 int) string {
+	var s strings.Builder
+	s.Grow(len("item-........-........"))
+	s.WriteString("item-")
+	s.WriteString(strconv.FormatInt(int64(id1), 10))
+	s.WriteRune('-')
+	s.WriteString(strconv.FormatInt(int64(id2), 10))
+	return s.String()
 }

@@ -6,17 +6,22 @@ import (
 	"os"
 	"tst/fork"
 	"tst/orig"
+
+	"github.com/a-h/templ"
 )
 
 func main() {
-	fmt.Println("ORIG:")
-	if err := orig.WithFmt(42).Render(context.Background(), os.Stdout); err != nil {
-		panic(err)
-	}
-	fmt.Println("")
+	const id = 42
 
-	fmt.Println("FORK:")
-	if err := fork.WithFmt(42).Render(context.Background(), os.Stdout); err != nil {
+	printComp("orig", orig.WithFmt(id))
+	printComp("orig-concat", orig.Concat(id))
+	printComp("orig-strbuild", orig.Strbuild(id))
+	printComp("fork", fork.WithFmt(id))
+}
+
+func printComp(name string, comp templ.Component) {
+	fmt.Println(name + ":")
+	if err := comp.Render(context.Background(), os.Stdout); err != nil {
 		panic(err)
 	}
 	fmt.Println("")
